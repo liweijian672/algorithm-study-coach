@@ -9,7 +9,7 @@ from ..models import Problem, ProblemTag, SolutionRecord, Tag
 from ..schemas import DiagnosisOut, TopicMasteryOut
 from ..services.mastery import RecordWithProblem, build_tag_mastery
 from ..services.recommendation import ProblemWithTags, recommend_problems
-from ..services.taxonomy import DEFAULT_TAGS
+from ..services.taxonomy import ensure_default_tags
 
 router = APIRouter()
 
@@ -20,17 +20,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-def ensure_default_tags(db: Session) -> list[Tag]:
-    existing = {tag.name: tag for tag in db.query(Tag).all()}
-    for name, display_name in DEFAULT_TAGS:
-        if name not in existing:
-            tag = Tag(name=name, display_name=display_name)
-            db.add(tag)
-            existing[name] = tag
-    db.commit()
-    return list(existing.values())
 
 
 @router.get("/diagnosis", response_model=DiagnosisOut)
@@ -95,4 +84,3 @@ def get_diagnosis(db: Session = Depends(get_db)):
         weak_tags=weak_tags,
         recommendations=recommendations,
     )
-

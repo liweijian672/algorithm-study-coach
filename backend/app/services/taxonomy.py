@@ -1,3 +1,8 @@
+from sqlalchemy.orm import Session
+
+from ..models import Tag
+
+
 DEFAULT_TAGS = [
     ("array", "数组"),
     ("string", "字符串"),
@@ -22,3 +27,13 @@ DEFAULT_TAGS = [
     ("math", "数学"),
 ]
 
+
+def ensure_default_tags(db: Session) -> list[Tag]:
+    existing = {tag.name: tag for tag in db.query(Tag).all()}
+    for name, display_name in DEFAULT_TAGS:
+        if name not in existing:
+            tag = Tag(name=name, display_name=display_name)
+            db.add(tag)
+            existing[name] = tag
+    db.commit()
+    return list(existing.values())
