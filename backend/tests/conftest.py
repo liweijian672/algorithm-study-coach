@@ -10,6 +10,16 @@ from app.db import Base, SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
 
 
+class FakeLLMClient:
+    def __init__(self, response: str):
+        self.response = response
+        self.calls = 0
+
+    def complete(self, prompt: str) -> str:
+        self.calls += 1
+        return self.response
+
+
 @pytest.fixture
 def client():
     Base.metadata.create_all(bind=engine)
@@ -27,4 +37,14 @@ def session():
     finally:
         db.close()
         Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture
+def fake_client(client):
+    return FakeLLMClient('{"tags": ["array", "hash"]}')
+
+
+@pytest.fixture
+def fake_malformed_client(client):
+    return FakeLLMClient("not-json")
 

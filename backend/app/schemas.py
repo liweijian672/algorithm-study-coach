@@ -48,3 +48,15 @@ class RecordOut(BaseModel):
     submitted_at: datetime
     event_key: str
 
+
+class SolutionOut(BaseModel):
+    language: str
+    code: str
+    complexity: str
+
+
+class CoachOut(BaseModel):
+    explanation: str
+    hints: list[str]
+    solutions: list[SolutionOut]
+
