@@ -60,3 +60,16 @@ class CoachOut(BaseModel):
     hints: list[str]
     solutions: list[SolutionOut]
 
+
+class TopicMasteryOut(BaseModel):
+    tag_id: int
+    name: str
+    display_name: str
+    mastery: float
+
+
+class DiagnosisOut(BaseModel):
+    tag_mastery: list[TopicMasteryOut]
+    weak_tags: list[TopicMasteryOut]
+    recommendations: list[int]
+

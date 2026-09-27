@@ -49,3 +49,12 @@ class Tag(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(64), unique=True)
     display_name: Mapped[str] = mapped_column(String(64))
+
+
+class ProblemTag(Base):
+    __tablename__ = "problem_tags"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    problem_id: Mapped[int] = mapped_column(ForeignKey("problems.id"))
+    tag_id: Mapped[int] = mapped_column(ForeignKey("tags.id"))
+    confidence: Mapped[float] = mapped_column(default=1.0)
