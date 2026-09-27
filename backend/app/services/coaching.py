@@ -1,9 +1,8 @@
-import json
 from dataclasses import dataclass
-import re
 
 from ..models import Problem
 from .cache import get_or_create
+from .json_utils import extract_json
 from .llm_client import LLMClient
 
 
@@ -16,26 +15,6 @@ class Solution:
 
 def _cache_key(problem: Problem, purpose: str) -> str:
     return f"{problem.id}:{purpose}"
-
-
-def _extract_json(raw: str):
-    text = raw.strip()
-    fenced = re.search(r"```(?:json)?\s*(.*?)```", text, re.DOTALL)
-    if fenced:
-        text = fenced.group(1).strip()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        start = min(
-            [i for i in (text.find("{"), text.find("[")) if i != -1],
-            default=-1,
-        )
-        if start == -1:
-            return None
-        try:
-            return json.loads(text[start:])
-        except json.JSONDecodeError:
-            return None
 
 
 def generate_explanation(problem: Problem, client: LLMClient) -> str:
@@ -57,7 +36,7 @@ def generate_hints(problem: Problem, client: LLMClient) -> list[str]:
             '只返回 JSON：{"hints":["提示1","提示2","提示3"]}。',
         ),
     )
-    payload = _extract_json(raw)
+    payload = extract_json(raw)
     if isinstance(payload, list):
         hints = [str(item) for item in payload]
     elif isinstance(payload, dict) and isinstance(payload.get("hints"), list):
@@ -78,7 +57,7 @@ def generate_solutions(problem: Problem, client: LLMClient) -> list[Solution]:
             '"complexity":"O(n)"}]}。',
         ),
     )
-    payload = _extract_json(raw)
+    payload = extract_json(raw)
     if isinstance(payload, dict) and isinstance(payload.get("solutions"), list):
         payload = payload["solutions"]
     if not isinstance(payload, list):

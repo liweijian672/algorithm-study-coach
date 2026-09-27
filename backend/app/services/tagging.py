@@ -1,9 +1,9 @@
-import json
 from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
 from ..models import Problem, ProblemTag, Tag
+from .json_utils import extract_json
 from .llm_client import LLMClient
 from .taxonomy import ensure_default_tags
 
@@ -25,12 +25,12 @@ def assign_tags(
         + ", ".join(tag.name for tag in taxonomy)
         + f". Title: {problem.title}. Difficulty: {problem.difficulty}."
     )
-    raw = client.complete(prompt)
     try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError:
+        raw = client.complete(prompt)
+    except Exception:
         return []
 
+    payload = extract_json(raw)
     names = payload.get("tags", []) if isinstance(payload, dict) else []
     known = {tag.name: tag for tag in taxonomy}
     known.update({tag.display_name: tag for tag in taxonomy})
@@ -70,4 +70,3 @@ def tag_and_store_problem(
     if added:
         db.commit()
     return added
-
