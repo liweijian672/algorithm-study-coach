@@ -1,9 +1,0 @@
-pyproject.toml
-algorithm_study_coach.egg-info/PKG-INFO
-algorithm_study_coach.egg-info/SOURCES.txt
-algorithm_study_coach.egg-info/dependency_links.txt
-algorithm_study_coach.egg-info/requires.txt
-algorithm_study_coach.egg-info/top_level.txt
-app/__init__.py
-tests/test_problems.py
-tests/test_records.py
