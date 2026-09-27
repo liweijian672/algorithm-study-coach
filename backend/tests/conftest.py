@@ -22,6 +22,11 @@ class FakeLLMClient:
         return self.response
 
 
+class StubLLMClient:
+    def complete(self, prompt: str) -> str:
+        return '{"tags": []}'
+
+
 @pytest.fixture
 def client():
     Base.metadata.create_all(bind=engine)
@@ -49,4 +54,11 @@ def fake_client(client):
 @pytest.fixture
 def fake_malformed_client(client):
     return FakeLLMClient("not-json")
+
+
+@pytest.fixture(autouse=True)
+def stub_problem_router_llm(monkeypatch):
+    import app.routers.problems as problems_router
+
+    monkeypatch.setattr(problems_router, "OpenAICompatibleLLMClient", StubLLMClient)
 

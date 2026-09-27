@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from ..db import SessionLocal
 from ..models import Problem
 from ..schemas import ProblemIn, ProblemOut
+from ..services.llm_client import OpenAICompatibleLLMClient
+from ..services.tagging import tag_and_store_problem
 
 router = APIRouter()
 
@@ -25,6 +27,7 @@ def create_problem(payload: ProblemIn, db: Session = Depends(get_db)):
     db.add(problem)
     db.commit()
     db.refresh(problem)
+    tag_and_store_problem(problem, db, OpenAICompatibleLLMClient())
     return problem
 
 
