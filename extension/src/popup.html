@@ -3,11 +3,80 @@
   <head>
     <meta charset="utf-8" />
     <title>算法学习教练</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        width: 320px;
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+      main {
+        padding: 16px;
+      }
+      h1 {
+        margin: 0 0 14px;
+        font-size: 16px;
+        font-weight: 650;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        color: #475569;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 13px;
+        outline: none;
+      }
+      input:focus {
+        border-color: #6366f1;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      button {
+        flex: 1;
+        padding: 8px 10px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+      #flush {
+        background: #6366f1;
+        color: #ffffff;
+      }
+      p {
+        min-height: 18px;
+        margin: 12px 0 0;
+        font-size: 12px;
+        color: #64748b;
+      }
+    </style>
   </head>
   <body>
     <main>
       <h1>算法学习教练</h1>
-      <button id="flush">同步到本地看板</button>
+      <label for="backend-url">后端地址</label>
+      <input id="backend-url" type="url" placeholder="http://localhost:8000" />
+      <div class="row">
+        <button id="save" type="button">保存</button>
+        <button id="flush" type="button">同步到看板</button>
+      </div>
       <p id="status">等待同步</p>
     </main>
     <script type="module" src="./popup.js"></script>
