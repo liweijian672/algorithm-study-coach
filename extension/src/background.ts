@@ -1,4 +1,4 @@
-import { EventQueue } from "./queue";
+import { EventQueue, eventKey } from "./queue";
 import type { SubmitEvent } from "./types";
 
 let events: SubmitEvent[] = [];
@@ -49,7 +49,7 @@ async function sendToBackend(event: SubmitEvent): Promise<void> {
       language: "cpp",
       code: event.code,
       submitted_at: event.submitted_at,
-      event_key: `${event.platform}:${event.source_id}:${event.submitted_at}`,
+      event_key: eventKey(event, event.code, event.status, event.submitted_at),
     }),
   });
 }
@@ -64,4 +64,3 @@ chrome.runtime.onMessage.addListener((message: { type: string; event?: SubmitEve
 });
 
 void restore();
-

@@ -46,3 +46,10 @@ export function startCapture(): void {
   }
 }
 
+document.addEventListener("click", (click) => {
+  const target = click.target as HTMLElement | null;
+  const button = target?.closest("button");
+  if (button && /提交|submit/i.test(button.textContent ?? "")) {
+    window.setTimeout(startCapture, 1500);
+  }
+});
