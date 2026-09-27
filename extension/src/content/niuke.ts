@@ -1,4 +1,5 @@
 import {
+  extractPageInfo,
   parseProblemPage,
   parseSolvedList,
   type NiuKePageInfo,
@@ -8,7 +9,7 @@ import type { SubmitEvent } from "../types";
 const IMPORT_BUTTON_ID = "algo-coach-import-solved";
 
 function currentPageInfo(): NiuKePageInfo | null {
-  return (window as unknown as { pageInfo?: NiuKePageInfo }).pageInfo ?? null;
+  return extractPageInfo(document);
 }
 
 function editorCode(): string {

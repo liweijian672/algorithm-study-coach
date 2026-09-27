@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { parseProblemPage, parseSolvedList } from "./niuke";
+import { extractPageInfo, parseProblemPage, parseSolvedList } from "./niuke";
 
 test("parses a problem page from DOM", () => {
   const doc = new DOMParser().parseFromString(
@@ -30,6 +30,26 @@ test("prefers the real nowcoder pageInfo payload", () => {
   expect(result?.source_id).toBe("20ef0972485e41019e39543e8e895b7f");
 });
 
+test("extracts pageInfo from inline scripts", () => {
+  const doc = new DOMParser().parseFromString(
+    `<script>window.pageInfo = {
+      questionTitle: 'Two Sum',
+      questionId: '745',
+      problemId: '248',
+      uuid: '20ef0972485e41019e39543e8e895b7f',
+      difficulty_var: '2',
+    };</script>`,
+    "text/html",
+  );
+  expect(extractPageInfo(doc)).toMatchObject({
+    questionTitle: "Two Sum",
+    questionId: "745",
+    problemId: "248",
+    uuid: "20ef0972485e41019e39543e8e895b7f",
+    difficulty_var: "2",
+  });
+});
+
 test("returns null when required fields are missing", () => {
   const doc = new DOMParser().parseFromString("<div>empty</div>", "text/html");
   expect(parseProblemPage(doc)).toBeNull();
@@ -38,7 +58,7 @@ test("returns null when required fields are missing", () => {
 test("finds solved rows in the nowcoder list page", () => {
   const doc = new DOMParser().parseFromString(
     `<table>
-      <tr><td><a href="/practice/20ef0972485e41019e39543e8e895b7f">Two Sum</a></td><td>\u5df2\u901a\u8fc7</td></tr>
+      <tr><td><a href="/practice/20ef0972485e41019e39543e8e895b7f">Two Sum</a></td><td>\u5df2\u901a\u8fc7</td><td>\u901a\u8fc7\u7387 38.89%</td></tr>
       <tr><td><a href="/practice/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa">Other</a></td><td>\u672a\u901a\u8fc7</td></tr>
     </table>`,
     "text/html",

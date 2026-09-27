@@ -11,7 +11,6 @@ export interface NiuKePageInfo {
 
 // 已通过 / 答案正确 / 通过率 / 简单 / 入门 / 较难 / 困难
 const SOLVED_TEXT = /(?:\u5df2\u901a\u8fc7|\u7b54\u6848\u6b63\u786e)/;
-const PASS_RATE_TEXT = /\u901a\u8fc7\u7387/;
 const EASY_TEXT = /(?:\u7b80\u5355|\u5165\u95e8|\beasy\b)/i;
 const HARD_TEXT = /(?:\u8f83\u96be|\u56f0\u96be|\bhard\b)/i;
 
@@ -35,6 +34,32 @@ function absoluteUrl(href: string | null | undefined): string {
   } catch {
     return href;
   }
+}
+
+export function extractPageInfo(doc: Document): NiuKePageInfo {
+  const scriptText = Array.from(doc.querySelectorAll("script"))
+    .map((script) => script.textContent ?? "")
+    .join("\n");
+  const info: NiuKePageInfo = {};
+
+  const title = scriptText.match(/questionTitle\s*:\s*['"]([^'"]+)['"]/);
+  if (title) info.questionTitle = title[1];
+
+  const difficulty = scriptText.match(
+    /difficulty_var\s*:\s*['"]([0-9]+)['"]/,
+  );
+  if (difficulty) info.difficulty_var = difficulty[1];
+
+  const uuid = scriptText.match(/\buuid\s*:\s*['"]([a-f0-9]{20,})['"]/i);
+  if (uuid) info.uuid = uuid[1];
+
+  const questionId = scriptText.match(/\bquestionId\s*:\s*['"]([0-9]+)['"]/);
+  if (questionId) info.questionId = questionId[1];
+
+  const problemId = scriptText.match(/\bproblemId\s*:\s*['"]([0-9]+)['"]/);
+  if (problemId) info.problemId = problemId[1];
+
+  return info;
 }
 
 function firstText(doc: Document, selectors: string[]): string {
@@ -113,7 +138,7 @@ export function parseSolvedList(doc: Document): SolvedProblem[] {
       "tr, li, [class*='question-item'], [class*='subject-item'], [class*='list-item']",
     );
     const rowText = row?.textContent ?? anchor.textContent ?? "";
-    if (!SOLVED_TEXT.test(rowText) || PASS_RATE_TEXT.test(rowText)) continue;
+    if (!SOLVED_TEXT.test(rowText)) continue;
 
     const title = anchor.textContent?.trim() ?? "";
     if (!title) continue;
