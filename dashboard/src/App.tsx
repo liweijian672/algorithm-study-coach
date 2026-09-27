@@ -30,7 +30,14 @@ export default function App() {
             onSelectProblem={(problemId) => setView({ name: "problem", problemId })}
           />
         )}
-        {view.name === "topic" && <Topic tagId={view.tagId} />}
+        {view.name === "topic" && (
+          <Topic
+            tagId={view.tagId}
+            onSelectProblem={(problemId) =>
+              setView({ name: "problem", problemId })
+            }
+          />
+        )}
         {view.name === "problem" && <Problem problemId={view.problemId} />}
       </main>
     </div>

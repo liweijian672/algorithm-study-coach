@@ -37,6 +37,9 @@ export const api = {
   getDiagnosis(): Promise<DiagnosisOut> {
     return request<DiagnosisOut>("/diagnosis");
   },
+  getTopicRecommendations(tagId: number): Promise<ProblemOut[]> {
+    return request<ProblemOut[]>(`/topics/${tagId}/recommendations`);
+  },
   getCoach(problemId: number): Promise<CoachOut> {
     return request<CoachOut>(`/problems/${problemId}/coach`);
   },

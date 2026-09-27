@@ -26,3 +26,12 @@ def recommend_problems(
         ranked.append((weakest, difficulty_order, recently_failed, problem.id))
     ranked.sort(key=lambda item: (item[0], item[1], item[2], item[3]))
     return [item[3] for item in ranked]
+
+
+def recommend_problems_for_tag(
+    mastery: dict[int, float],
+    problems: Sequence[ProblemWithTags],
+    tag_id: int,
+) -> list[int]:
+    tagged = [problem for problem in problems if tag_id in problem.tag_ids]
+    return recommend_problems(mastery, tagged)
