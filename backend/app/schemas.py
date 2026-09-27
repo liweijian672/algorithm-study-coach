@@ -50,6 +50,8 @@ class RecordOut(BaseModel):
 
 
 class SolutionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     language: str
     code: str
     complexity: str
@@ -72,4 +74,3 @@ class DiagnosisOut(BaseModel):
     tag_mastery: list[TopicMasteryOut]
     weak_tags: list[TopicMasteryOut]
     recommendations: list[int]
-

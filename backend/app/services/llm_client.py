@@ -20,6 +20,8 @@ class OpenAICompatibleLLMClient(LLMClient):
         self.model = model
 
     def complete(self, prompt: str) -> str:
+        if not self.base_url or not self.api_key or not self.model:
+            return "LLM not configured. Set LLM_BASE_URL, LLM_API_KEY, and LLM_MODEL."
         response = httpx.post(
             f"{self.base_url}/chat/completions",
             headers={"Authorization": f"Bearer {self.api_key}"},
@@ -31,4 +33,3 @@ class OpenAICompatibleLLMClient(LLMClient):
         )
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
-
