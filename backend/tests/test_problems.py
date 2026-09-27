@@ -16,6 +16,21 @@ def test_create_and_get_problem(client):
     assert fetched.json()["source_id"] == "NC1"
 
 
+def test_list_problems(client):
+    payload = {
+        "platform": "niuke",
+        "source_id": "NC_LIST",
+        "title": "List Problem",
+        "difficulty": "easy",
+        "url": "https://example.com/list",
+        "description": None,
+    }
+    client.post("/problems", json=payload)
+    listed = client.get("/problems")
+    assert listed.status_code == 200
+    assert any(item["source_id"] == "NC_LIST" for item in listed.json())
+
+
 def test_llm_cache_roundtrip(session):
     from app.models import LLMCache
 

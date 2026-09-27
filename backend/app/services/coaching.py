@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+import re
 
 from ..models import Problem
 from .cache import get_or_create
@@ -17,22 +18,46 @@ def _cache_key(problem: Problem, purpose: str) -> str:
     return f"{problem.id}:{purpose}"
 
 
+def _extract_json(raw: str):
+    text = raw.strip()
+    fenced = re.search(r"```(?:json)?\s*(.*?)```", text, re.DOTALL)
+    if fenced:
+        text = fenced.group(1).strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        start = min(
+            [i for i in (text.find("{"), text.find("[")) if i != -1],
+            default=-1,
+        )
+        if start == -1:
+            return None
+        try:
+            return json.loads(text[start:])
+        except json.JSONDecodeError:
+            return None
+
+
 def generate_explanation(problem: Problem, client: LLMClient) -> str:
     return get_or_create(
         _cache_key(problem, "explanation"),
-        lambda: client.complete(f"Explain the solution for {problem.title}."),
+        lambda: client.complete(
+            f"请用中文讲解算法题《{problem.title}》。"
+            "输出解题思路、关键步骤、时间复杂度和空间复杂度，"
+            "最后给出 C++ 代码。使用 Markdown。",
+        ),
     )
 
 
 def generate_hints(problem: Problem, client: LLMClient) -> list[str]:
     raw = get_or_create(
         _cache_key(problem, "hints"),
-        lambda: client.complete(f"Give three progressive hints for {problem.title}."),
+        lambda: client.complete(
+            f"请为算法题《{problem.title}》给出三个渐进式提示。"
+            '只返回 JSON：{"hints":["提示1","提示2","提示3"]}。',
+        ),
     )
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError:
-        payload = None
+    payload = _extract_json(raw)
     if isinstance(payload, list):
         hints = [str(item) for item in payload]
     elif isinstance(payload, dict) and isinstance(payload.get("hints"), list):
@@ -47,12 +72,15 @@ def generate_hints(problem: Problem, client: LLMClient) -> list[str]:
 def generate_solutions(problem: Problem, client: LLMClient) -> list[Solution]:
     raw = get_or_create(
         _cache_key(problem, "solutions"),
-        lambda: client.complete(f"Give two C++ solutions for {problem.title}."),
+        lambda: client.complete(
+            f"请为算法题《{problem.title}》给出两种 C++ 解法。"
+            '只返回 JSON：{"solutions":[{"language":"cpp","code":"...",'
+            '"complexity":"O(n)"}]}。',
+        ),
     )
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError:
-        payload = None
+    payload = _extract_json(raw)
+    if isinstance(payload, dict) and isinstance(payload.get("solutions"), list):
+        payload = payload["solutions"]
     if not isinstance(payload, list):
         payload = []
     solutions = []

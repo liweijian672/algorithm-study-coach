@@ -28,6 +28,11 @@ def create_problem(payload: ProblemIn, db: Session = Depends(get_db)):
     return problem
 
 
+@router.get("/problems", response_model=list[ProblemOut])
+def list_problems(db: Session = Depends(get_db)):
+    return db.query(Problem).all()
+
+
 @router.get("/problems/{problem_id}", response_model=ProblemOut)
 def get_problem(problem_id: int, db: Session = Depends(get_db)):
     problem = db.get(Problem, problem_id)

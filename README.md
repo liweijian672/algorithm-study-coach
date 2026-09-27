@@ -28,14 +28,17 @@ python -m uvicorn app.main:app --reload --port 8000
 
 ## 配置大模型
 
-通过环境变量配置 OpenAI 兼容接口。未配置时，看板仍可运行，但讲解和解法会
-返回占位内容。
+在 `backend/.env` 中配置 OpenAI 兼容接口，本作品默认使用 DeepSeek：
 
-```powershell
-$env:LLM_BASE_URL="https://your-provider.example.com/v1"
-$env:LLM_API_KEY="your-api-key"
-$env:LLM_MODEL="your-model-name"
+```text
+LLM_BASE_URL=https://api.deepseek.com
+LLM_API_KEY=your-deepseek-api-key
+LLM_MODEL=deepseek-chat
 ```
+
+可以把 `backend/.env.example` 复制为 `backend/.env`，再填入真实 Key。`.env`
+已加入 `.gitignore`，不会被提交。未配置时，看板仍可运行，但讲解、提示和多解
+会返回占位内容。
 
 ## 启动看板
 

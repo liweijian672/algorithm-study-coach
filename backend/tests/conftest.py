@@ -1,10 +1,12 @@
 import sys
+import os
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+os.environ["DATABASE_URL"] = "sqlite:///./backend/test_coach.db"
 
 from app.db import Base, SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402

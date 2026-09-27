@@ -14,3 +14,19 @@ def test_duplicate_event_key_is_idempotent(client):
     assert first.status_code == 200
     assert second.status_code == 200
     assert first.json()["id"] == second.json()["id"]
+
+
+def test_list_records_filters_by_problem(client):
+    problem = client.post("/problems", json={
+        "platform": "niuke", "source_id": "NC_REC", "title": "Record",
+        "difficulty": "easy", "url": "https://example.com/rec",
+        "description": None,
+    }).json()
+    client.post("/records", json={
+        "problem_id": problem["id"], "status": "accepted", "language": "cpp",
+        "code": "int main(){}", "time_cost_ms": None, "memory_cost_kb": None,
+        "submitted_at": "2026-09-27T10:00:00", "event_key": "niuke:NC_REC:1",
+    })
+    listed = client.get(f"/records?problem_id={problem['id']}")
+    assert listed.status_code == 200
+    assert len(listed.json()) == 1
