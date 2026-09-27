@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { parseProblemPage, parseSolvedList } from "./niuke";
 
-test("parses a problem page", () => {
+test("parses a problem page from DOM", () => {
   const doc = new DOMParser().parseFromString(
     `<h1 class="subject-title">Two Sum</h1>
      <span class="tag">array</span><span class="tag">hash</span>
@@ -15,16 +15,39 @@ test("parses a problem page", () => {
   expect(result?.difficulty).toBe("easy");
 });
 
+test("prefers the real nowcoder pageInfo payload", () => {
+  const doc = new DOMParser().parseFromString(
+    `<div>ignored</div>`,
+    "text/html",
+  );
+  const result = parseProblemPage(doc, {
+    uuid: "20ef0972485e41019e39543e8e895b7f",
+    questionTitle: "\u4e24\u6570\u4e4b\u548c",
+    difficulty_var: "2",
+  });
+  expect(result?.title).toBe("\u4e24\u6570\u4e4b\u548c");
+  expect(result?.difficulty).toBe("medium");
+  expect(result?.source_id).toBe("20ef0972485e41019e39543e8e895b7f");
+});
+
 test("returns null when required fields are missing", () => {
   const doc = new DOMParser().parseFromString("<div>empty</div>", "text/html");
   expect(parseProblemPage(doc)).toBeNull();
 });
 
-test("parses a solved problem list", () => {
+test("finds solved rows in the nowcoder list page", () => {
   const doc = new DOMParser().parseFromString(
-    `<ul><li data-question-id="NC1"><a href="/practice/1">Two Sum</a></li></ul>`,
+    `<table>
+      <tr><td><a href="/practice/20ef0972485e41019e39543e8e895b7f">Two Sum</a></td><td>\u5df2\u901a\u8fc7</td></tr>
+      <tr><td><a href="/practice/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa">Other</a></td><td>\u672a\u901a\u8fc7</td></tr>
+    </table>`,
     "text/html",
   );
-  expect(parseSolvedList(doc)).toHaveLength(1);
-  expect(parseSolvedList(doc)[0].source_id).toBe("NC1");
+  const result = parseSolvedList(doc);
+  expect(result).toHaveLength(1);
+  expect(result[0].source_id).toBe("20ef0972485e41019e39543e8e895b7f");
+  expect(result[0].title).toBe("Two Sum");
+  expect(result[0].url).toBe(
+    "https://www.nowcoder.com/practice/20ef0972485e41019e39543e8e895b7f",
+  );
 });

@@ -1,10 +1,40 @@
 import type { Difficulty, ParsedProblem, SolvedProblem } from "../types";
 
+export interface NiuKePageInfo {
+  uuid?: string;
+  questionId?: string;
+  problemId?: string;
+  questionTitle?: string;
+  questionName_var?: string;
+  difficulty_var?: string;
+}
+
+// 已通过 / 答案正确 / 通过率 / 简单 / 入门 / 较难 / 困难
+const SOLVED_TEXT = /(?:\u5df2\u901a\u8fc7|\u7b54\u6848\u6b63\u786e)/;
+const PASS_RATE_TEXT = /\u901a\u8fc7\u7387/;
+const EASY_TEXT = /(?:\u7b80\u5355|\u5165\u95e8|\beasy\b)/i;
+const HARD_TEXT = /(?:\u8f83\u96be|\u56f0\u96be|\bhard\b)/i;
+
 function mapDifficulty(value: string | null): Difficulty {
-  const text = (value ?? "").trim().toLowerCase();
-  if (["1", "easy", "简单", "入门"].includes(text)) return "easy";
-  if (["3", "hard", "困难", "较难"].includes(text)) return "hard";
+  const text = (value ?? "").trim();
+  if (!text) return "medium";
+  if (text === "1" || EASY_TEXT.test(text)) return "easy";
+  if (text === "3" || HARD_TEXT.test(text)) return "hard";
   return "medium";
+}
+
+function uuidFromUrl(url: string | null | undefined): string {
+  const match = (url ?? "").match(/\/practice\/([a-f0-9]{20,})/i);
+  return match?.[1] ?? "";
+}
+
+function absoluteUrl(href: string | null | undefined): string {
+  if (!href) return "";
+  try {
+    return new URL(href, "https://www.nowcoder.com").toString();
+  } catch {
+    return href;
+  }
 }
 
 function firstText(doc: Document, selectors: string[]): string {
@@ -24,27 +54,39 @@ function tagTexts(doc: Document): string[] {
   return Array.from(new Set(texts));
 }
 
-export function parseProblemPage(doc: Document): ParsedProblem | null {
-  const title = firstText(doc, [".subject-title", "h1", "[class*='title']"]);
+export function parseProblemPage(
+  doc: Document,
+  pageInfo?: NiuKePageInfo | null,
+): ParsedProblem | null {
+  const title =
+    pageInfo?.questionTitle ??
+    pageInfo?.questionName_var ??
+    firstText(doc, [".subject-title", "h1", "[class*='title']"]);
   if (!title) return null;
 
   const difficultyNode = doc.querySelector("[data-difficulty]");
   const difficultyText =
     difficultyNode?.getAttribute("data-difficulty") ??
     difficultyNode?.textContent?.trim() ??
+    pageInfo?.difficulty_var ??
     firstText(doc, [".difficulty", "[class*='difficulty']"]);
   const difficulty = mapDifficulty(difficultyText || null);
 
   const sourceNode = doc.querySelector(
     "[data-question-id], [data-problem-id], [data-id]",
   );
-  const source_id = sourceNode?.getAttribute("data-question-id")
-    ?? sourceNode?.getAttribute("data-problem-id")
-    ?? sourceNode?.getAttribute("data-id")
-    ?? "";
   const url = doc.querySelector("link[rel='canonical']")?.getAttribute("href")
     ?? doc.location?.href
     ?? "";
+  const source_id =
+    uuidFromUrl(url) ||
+    pageInfo?.uuid ||
+    pageInfo?.questionId ||
+    pageInfo?.problemId ||
+    sourceNode?.getAttribute("data-question-id") ||
+    sourceNode?.getAttribute("data-problem-id") ||
+    sourceNode?.getAttribute("data-id") ||
+    "";
 
   return {
     platform: "niuke",
@@ -57,31 +99,32 @@ export function parseProblemPage(doc: Document): ParsedProblem | null {
 }
 
 export function parseSolvedList(doc: Document): SolvedProblem[] {
-  const listItems = Array.from(doc.querySelectorAll("li[data-question-id]"));
-  const anchors = listItems.length
-    ? listItems
-        .map((item) => item.querySelector("a"))
-        .filter((anchor): anchor is HTMLAnchorElement => anchor !== null)
-    : Array.from(doc.querySelectorAll("a[href*='/practice/']"));
+  const anchors = Array.from(
+    doc.querySelectorAll("a[href*='/practice/']"),
+  ) as HTMLAnchorElement[];
   const results: SolvedProblem[] = [];
+  const seen = new Set<string>();
 
   for (const anchor of anchors) {
-    const parent = anchor.closest("li[data-question-id]");
-    const source_id =
-      parent?.getAttribute("data-question-id") ??
-      anchor?.getAttribute("href")?.split("/").filter(Boolean).pop() ??
-      "";
-    const title = anchor?.textContent?.trim() ?? "";
-    if (!source_id || !title) continue;
+    const source_id = uuidFromUrl(anchor.getAttribute("href"));
+    if (!source_id || seen.has(source_id)) continue;
 
+    const row = anchor.closest(
+      "tr, li, [class*='question-item'], [class*='subject-item'], [class*='list-item']",
+    );
+    const rowText = row?.textContent ?? anchor.textContent ?? "";
+    if (!SOLVED_TEXT.test(rowText) || PASS_RATE_TEXT.test(rowText)) continue;
+
+    const title = anchor.textContent?.trim() ?? "";
+    if (!title) continue;
+
+    seen.add(source_id);
     results.push({
       source_id,
       title,
-      difficulty: mapDifficulty(
-        parent?.getAttribute("data-difficulty") ?? null,
-      ),
+      difficulty: mapDifficulty(rowText),
       tags: [],
-      url: anchor?.getAttribute("href") ?? "",
+      url: absoluteUrl(anchor.getAttribute("href")),
     });
   }
 
