@@ -17,3 +17,9 @@ export interface SolvedProblem {
   url: string;
 }
 
+export interface SubmitEvent extends ParsedProblem {
+  code: string;
+  status: string;
+  submitted_at: string;
+}
+

@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "算法学习教练",
+  "version": "0.1.0",
+  "description": "记录牛客 C++ 刷题过程，生成薄弱点诊断和学习建议。",
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:8000/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.nowcoder.com/*"],
+      "js": ["content/niuke.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
